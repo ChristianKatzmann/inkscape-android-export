@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
+	<_name>Android Export</_name>
+	<id>de.cbecker.android_export</id>
+
+	<dependency type="executable" location="extensions">android_export.py</dependency>
+
+	<_param name="title" type="description">This extension exports all currently selected items in different densities.\n\nThe exported PNGs will be named by their ID in the SVG, so make sure that all items have reasonable IDs.</_param>
+
+	<param name="resdir" type="string" _gui-text="Android Resource directory"></param>
+	<param name="ldpi" type="boolean" _gui-text="Export LDPI variants">false</param>
+	<param name="mdpi" type="boolean" _gui-text="Export MDPI variants">true</param>
+	<param name="hdpi" type="boolean" _gui-text="Export HDPI variants">true</param>
+	<param name="xhdpi" type="boolean" _gui-text="Export XHDPI variants">true</param>
+	<param name="xxhdpi" type="boolean" _gui-text="Export XXHDPI variants">true</param>
+	<param name="reduce" type="boolean" _gui-text="Use ImageMagick and OptiPNG to reduce the image size">true</param>
+
+	<effect needs-live-preview="false">
+		<object-type>all</object-type>
+		<effects-menu>
+			<submenu _name="Export"/>
+		</effects-menu>
+	</effect>
+
+	<script>
+		<command reldir="extensions" interpreter="python">android_export.py</command>
+	</script>
+</inkscape-extension>
