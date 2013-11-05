@@ -13,6 +13,7 @@
 	<param name="hdpi" type="boolean" _gui-text="Export HDPI variants">true</param>
 	<param name="xhdpi" type="boolean" _gui-text="Export XHDPI variants">true</param>
 	<param name="xxhdpi" type="boolean" _gui-text="Export XXHDPI variants">true</param>
+	<param name="xxxhdpi" type="boolean" _gui-text="Export XXXHDPI variants">true</param>
 	<param name="reduce" type="boolean" _gui-text="Use ImageMagick and OptiPNG to reduce the image size">true</param>
 
 	<effect needs-live-preview="false">
