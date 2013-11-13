@@ -68,7 +68,7 @@ def export_density(svg, options, qualifier, dpi):
                               ], stdout=DEVNULL, stderr=subprocess.STDOUT)
 
   if options.source == '"selected_ids"':
-    for id in options.id:
+    for id in options.ids:
       export_resource("--export-id=%s" % id, id)
   else:
     export_resource("--export-area-page", options.resname)
@@ -100,7 +100,7 @@ class DensityGroup(optparse.OptionGroup):
 
 parser = optparse.OptionParser(usage="usage: %prog [options] SVGfile", option_class=Option)
 parser.add_option("--source",  action="store",  help="Source of the drawable. Either 'selected_ids' (specified via --id) or 'page'.")
-parser.add_option("--id",      action="append", help="ID attribute of objects to export")
+parser.add_option("--id",      action="append", dest="ids", metavar="ID", help="ID attribute of objects to export, can be specified multiple times")
 parser.add_option("--resdir",  action="store",  help="Resources directory")
 parser.add_option("--resname", action="store",  help="Resource name (when --source=page).")
 
@@ -128,7 +128,7 @@ if not os.access(options.resdir, os.W_OK):
   error("Wrong Android Resource directory specified:\nCould not write to '%s'" % options.resdir)
 if options.source not in ('"selected_ids"', '"page"'):
   error("Select what to export (selected items or whole page)")
-if options.source == '"selected_ids"' and options.id is None:
+if options.source == '"selected_ids"' and options.ids is None:
   error("Select at least one item to export")
 if options.source == '"page"' and not options.resname:
   error("Please enter a resource name")
