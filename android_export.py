@@ -82,21 +82,39 @@ class Option(optparse.Option):
   TYPE_CHECKER = copy(optparse.Option.TYPE_CHECKER)
   TYPE_CHECKER["boolstr"] = check_boolstr
 
+def append_density(option, opt_str, value, parser, *density):
+  if not value:
+    return
+  if getattr(parser.values, option.dest) is None:
+      setattr(parser.values, option.dest, [])
+  getattr(parser.values, option.dest).append(density)
+
+class DensityGroup(optparse.OptionGroup):
+  def add_density_option(self, name, dpi):
+    self.add_option("--%s" % name, action="callback", type="boolstr", dest="densities", metavar="BOOL",
+      callback=append_density, callback_args=(name, dpi), help="Export %s variants" % (name.upper()))
+
 parser = optparse.OptionParser(usage="usage: %prog [options] SVGfile", option_class=Option)
 parser.add_option("--source",  action="store",  help="Source of the drawable. Either 'selected_ids' (specified via --id) or 'page'.")
 parser.add_option("--id",      action="append", help="ID attribute of objects to export")
 parser.add_option("--resdir",  action="store",  help="Resources directory")
 parser.add_option("--resname", action="store",  help="Resource name (when --source=page).")
-parser.add_option("--ldpi",    action="store",  type="boolstr", help="Export LDPI variants")
-parser.add_option("--mdpi",    action="store",  type="boolstr", help="Export MDPI variants")
-parser.add_option("--hdpi",    action="store",  type="boolstr", help="Export HDPI variants")
-parser.add_option("--xhdpi",   action="store",  type="boolstr", help="Export XHDPI variants")
-parser.add_option("--xxhdpi",  action="store",  type="boolstr", help="Export XXHDPI variants")
-parser.add_option("--xxxhdpi", action="store",  type="boolstr", help="Export XXXHDPI variants")
+
+group = DensityGroup(parser, "Select which densities to export")
+group.add_density_option("ldpi", 67.5)
+group.add_density_option("mdpi", 90)
+group.add_density_option("hdpi", 135)
+group.add_density_option("xhdpi", 180)
+group.add_density_option("xxhdpi", 270)
+group.add_density_option("xxxhdpi", 360)
+parser.add_option_group(group)
+
 parser.add_option("--reduce",  action="store",  type="boolstr", help="Use ImageMagick and OptiPNG to reduce the image size")
 
-svg = sys.argv[-1]
 (options, args) = parser.parse_args()
+if len(args) != 1:
+  parser.error("Expected exactly one argument, got %d" % len(args))
+svg = args[0]
 
 if options.resdir is None:
   error("No Android Resource directory specified")
@@ -110,7 +128,7 @@ if options.source == '"selected_ids"' and options.id is None:
   error("Select at least one item to export")
 if options.source == '"page"' and not options.resname:
   error("Please enter a resource name")
-if not options.ldpi and not options.mdpi and not options.hdpi and not options.xhdpi and not options.xxhdpi and not options.xxxhdpi:
+if not options.densities:
   error("Select at least one DPI variant to export")
 if not checkForPath("inkscape"):
   error("Make sure you have 'inkscape' on your PATH")
@@ -120,15 +138,5 @@ if options.reduce:
   if not checkForPath("optipng"):
     error("Make sure you have 'optipng' on your PATH if you want to reduce the image size")
 
-if options.ldpi:
-  export(svg, options, "ldpi", 67.5)
-if options.mdpi:
-  export(svg, options, "mdpi", 90)
-if options.hdpi:
-  export(svg, options, "hdpi", 135)
-if options.xhdpi:
-  export(svg, options, "xhdpi", 180)
-if options.xxhdpi:
-  export(svg, options, "xxhdpi", 270)
-if options.xxxhdpi:
-  export(svg, options, "xxxhdpi", 360)
+for qualifier, dpi in options.densities:
+  export(svg, options, qualifier, dpi)
