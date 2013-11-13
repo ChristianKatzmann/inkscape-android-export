@@ -37,6 +37,7 @@ def checkForPath(command):
 
 def error(msg):
   sys.stderr.write((unicode(msg) + "\n").encode("UTF-8"))
+  sys.exit(1)
 
 def export(svg, options, qualifier, dpi):
   dir = "%s/drawable-%s" % (options.resdir, qualifier)
@@ -88,34 +89,35 @@ svg = sys.argv[-1]
 
 if options.resdir is None:
   error("No Android Resource directory specified")
-elif not os.path.isdir(options.resdir):
+if not os.path.isdir(options.resdir):
   error("Wrong Android Resource directory specified:\n'%s' is no dir" % options.resdir)
-elif not os.access(options.resdir, os.W_OK):
+if not os.access(options.resdir, os.W_OK):
   error("Wrong Android Resource directory specified:\nCould not write to '%s'" % options.resdir)
-elif options.source not in ('"selected_ids"', '"page"'):
+if options.source not in ('"selected_ids"', '"page"'):
   error("Select what to export (selected items or whole page)")
-elif options.source == '"selected_ids"' and options.id is None:
+if options.source == '"selected_ids"' and options.id is None:
   error("Select at least one item to export")
-elif options.source == '"page"' and not options.resname:
+if options.source == '"page"' and not options.resname:
   error("Please enter a resource name")
-elif not check(options.ldpi) and not check(options.mdpi) and not check(options.hdpi) and not check(options.xhdpi) and not check(options.xxhdpi) and not check(options.xxxhdpi):
+if not check(options.ldpi) and not check(options.mdpi) and not check(options.hdpi) and not check(options.xhdpi) and not check(options.xxhdpi) and not check(options.xxxhdpi):
   error("Select at least one DPI variant to export")
-elif not checkForPath("inkscape"):
+if not checkForPath("inkscape"):
   error("Make sure you have 'inkscape' on your PATH")
-elif check(options.reduce) and not checkForPath("convert"):
-  error("Make sure you have 'convert' on your PATH if you want to reduce the image size")
-elif check(options.reduce) and not checkForPath("optipng"):
-  error("Make sure you have 'optipng' on your PATH if you want to reduce the image size")
-else:
-  if check(options.ldpi):
-    export(svg, options, "ldpi", 67.5)
-  if check(options.mdpi):
-    export(svg, options, "mdpi", 90)
-  if check(options.hdpi):
-    export(svg, options, "hdpi", 135)
-  if check(options.xhdpi):
-    export(svg, options, "xhdpi", 180)
-  if check(options.xxhdpi):
-    export(svg, options, "xxhdpi", 270)
-  if check(options.xxxhdpi):
-    export(svg, options, "xxxhdpi", 360)
+if check(options.reduce):
+  if not checkForPath("convert"):
+    error("Make sure you have 'convert' on your PATH if you want to reduce the image size")
+  if not checkForPath("optipng"):
+    error("Make sure you have 'optipng' on your PATH if you want to reduce the image size")
+  
+if check(options.ldpi):
+  export(svg, options, "ldpi", 67.5)
+if check(options.mdpi):
+  export(svg, options, "mdpi", 90)
+if check(options.hdpi):
+  export(svg, options, "hdpi", 135)
+if check(options.xhdpi):
+  export(svg, options, "xhdpi", 180)
+if check(options.xxhdpi):
+  export(svg, options, "xxhdpi", 270)
+if check(options.xxxhdpi):
+  export(svg, options, "xxxhdpi", 360)
