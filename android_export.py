@@ -99,10 +99,10 @@ class DensityGroup(optparse.OptionGroup):
       callback=append_density, callback_args=(name, dpi), help="Export %s variants" % (name.upper()))
 
 parser = optparse.OptionParser(usage="usage: %prog [options] SVGfile", option_class=Option)
-parser.add_option("--source",  action="store",  help="Source of the drawable. Either 'selected_ids' (specified via --id) or 'page'.")
+parser.add_option("--source",  action="store", type="choice", choices=('"selected_ids"', '"page"'),  help="Source of the drawable")
 parser.add_option("--id",      action="append", dest="ids", metavar="ID", help="ID attribute of objects to export, can be specified multiple times")
 parser.add_option("--resdir",  action="store",  help="Resources directory")
-parser.add_option("--resname", action="store",  help="Resource name (when --source=page).")
+parser.add_option("--resname", action="store",  help="Resource name (when --source=page)")
 
 group = DensityGroup(parser, "Select which densities to export")
 group.add_density_option("ldpi", 67.5)
@@ -130,8 +130,6 @@ if options.source not in ('"selected_ids"', '"page"'):
   error("Select what to export (selected items or whole page)")
 if options.source == '"selected_ids"' and options.ids is None:
   error("Select at least one item to export")
-if options.source == '"page"' and not options.resname:
-  error("Please enter a resource name")
 if not options.densities:
   error("Select at least one DPI variant to export")
 if not checkForPath("inkscape"):
