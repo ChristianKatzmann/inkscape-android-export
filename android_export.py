@@ -37,7 +37,11 @@ def error(msg):
   sys.stderr.write((unicode(msg) + "\n").encode("UTF-8"))
   sys.exit(1)
 
-def export(svg, options, qualifier, dpi):
+def export(svg, options):
+  for qualifier, dpi in options.densities:
+    export_density(svg, options, qualifier, dpi)
+
+def export_density(svg, options, qualifier, dpi):
   dir = "%s/drawable-%s" % (options.resdir, qualifier)
 
   if not os.path.exists(dir):
@@ -138,5 +142,4 @@ if options.reduce:
   if not checkForPath("optipng"):
     error("Make sure you have 'optipng' on your PATH if you want to reduce the image size")
 
-for qualifier, dpi in options.densities:
-  export(svg, options, qualifier, dpi)
+export(svg, options)
