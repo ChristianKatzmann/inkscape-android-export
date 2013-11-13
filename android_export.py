@@ -44,13 +44,13 @@ def export(svg, options, qualifier, dpi):
   if not os.path.exists(dir):
     os.makedirs(dir)
 
-  for id in options.id:
-    png = "%s/%s.png" % (dir, id)
+  def export_resource(param, name):
+    png = "%s/%s.png" % (dir, name)
 
     subprocess.check_output([
                               "inkscape",
                               "--without-gui",
-                              "--export-id=%s" % id,
+                              param,
                               "--export-dpi=%s" % dpi,
                               "--export-png=%s" % png,
                               svg
@@ -64,9 +64,17 @@ def export(svg, options, qualifier, dpi):
                                 "optipng", "-quiet", "-o7", png
                               ], stderr=subprocess.STDOUT)
 
+  if options.source == '"selected_ids"':
+    for id in options.id:
+      export_resource("--export-id=%s" % id, id)
+  else:
+    export_resource("--export-area-page", options.resname)
+
 parser = optparse.OptionParser(usage="usage: %prog [options] SVGfile")
+parser.add_option("--source",  action="store",  help="Source of the drawable. Either 'selected_ids' (specified via --id) or 'page'.")
 parser.add_option("--id",      action="append", help="ID attribute of objects to export")
 parser.add_option("--resdir",  action="store",  help="Resources directory")
+parser.add_option("--resname", action="store",  help="Resource name (when --source=page).")
 parser.add_option("--ldpi",    action="store",  help="Export LDPI variants")
 parser.add_option("--mdpi",    action="store",  help="Export MDPI variants")
 parser.add_option("--hdpi",    action="store",  help="Export HDPI variants")
@@ -84,8 +92,12 @@ elif not os.path.isdir(options.resdir):
   error("Wrong Android Resource directory specified:\n'%s' is no dir" % options.resdir)
 elif not os.access(options.resdir, os.W_OK):
   error("Wrong Android Resource directory specified:\nCould not write to '%s'" % options.resdir)
-elif options.id is None:
+elif options.source not in ('"selected_ids"', '"page"'):
+  error("Select what to export (selected items or whole page)")
+elif options.source == '"selected_ids"' and options.id is None:
   error("Select at least one item to export")
+elif options.source == '"page"' and not options.resname:
+  error("Please enter a resource name")
 elif not check(options.ldpi) and not check(options.mdpi) and not check(options.hdpi) and not check(options.xhdpi) and not check(options.xxhdpi) and not check(options.xxxhdpi):
   error("Select at least one DPI variant to export")
 elif not checkForPath("inkscape"):
