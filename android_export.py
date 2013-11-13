@@ -23,15 +23,15 @@ import sys
 import os
 import subprocess
 from copy import copy
+try:
+  from subprocess import DEVNULL
+except ImportError:
+  DEVNULL = open(os.devnull, 'w')
 
 def checkForPath(command):
-  try:
-    subprocess.check_output([
+  return 0 == subprocess.call([
                               command, "--version"
-                            ], stderr=subprocess.STDOUT)
-    return True
-  except:
-    return False
+                            ], stdout=DEVNULL, stderr=subprocess.STDOUT)
 
 def error(msg):
   sys.stderr.write((unicode(msg) + "\n").encode("UTF-8"))
@@ -50,22 +50,22 @@ def export_density(svg, options, qualifier, dpi):
   def export_resource(param, name):
     png = "%s/%s.png" % (dir, name)
 
-    subprocess.check_output([
+    subprocess.check_call([
                               "inkscape",
                               "--without-gui",
                               param,
                               "--export-dpi=%s" % dpi,
                               "--export-png=%s" % png,
                               svg
-                            ], stderr=subprocess.STDOUT)
+                            ], stdout=DEVNULL, stderr=subprocess.STDOUT)
 
     if options.reduce:
-      subprocess.check_output([
+      subprocess.check_call([
                                 "convert", "-antialias", "-strip", png, png
-                              ], stderr=subprocess.STDOUT)
-      subprocess.check_output([
+                              ], stdout=DEVNULL, stderr=subprocess.STDOUT)
+      subprocess.check_call([
                                 "optipng", "-quiet", "-o7", png
-                              ], stderr=subprocess.STDOUT)
+                              ], stdout=DEVNULL, stderr=subprocess.STDOUT)
 
   if options.source == '"selected_ids"':
     for id in options.id:
