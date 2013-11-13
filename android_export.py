@@ -22,9 +22,7 @@ import optparse
 import sys
 import os
 import subprocess
-
-def check(value):
-  return value.capitalize() == 'True'
+from copy import copy
 
 def checkForPath(command):
   try:
@@ -57,7 +55,7 @@ def export(svg, options, qualifier, dpi):
                               svg
                             ], stderr=subprocess.STDOUT)
 
-    if check(options.reduce):
+    if options.reduce:
       subprocess.check_output([
                                 "convert", "-antialias", "-strip", png, png
                               ], stderr=subprocess.STDOUT)
@@ -71,18 +69,31 @@ def export(svg, options, qualifier, dpi):
   else:
     export_resource("--export-area-page", options.resname)
 
-parser = optparse.OptionParser(usage="usage: %prog [options] SVGfile")
+def check_boolstr(option, opt, value):
+  value = value.capitalize()
+  if value == "True":
+    return True
+  if value == "False":
+    return False
+  raise optparse.OptionValueError("option %s: invalid boolean value: %s" % (opt, value))
+
+class Option(optparse.Option):
+  TYPES = optparse.Option.TYPES + ("boolstr",)
+  TYPE_CHECKER = copy(optparse.Option.TYPE_CHECKER)
+  TYPE_CHECKER["boolstr"] = check_boolstr
+
+parser = optparse.OptionParser(usage="usage: %prog [options] SVGfile", option_class=Option)
 parser.add_option("--source",  action="store",  help="Source of the drawable. Either 'selected_ids' (specified via --id) or 'page'.")
 parser.add_option("--id",      action="append", help="ID attribute of objects to export")
 parser.add_option("--resdir",  action="store",  help="Resources directory")
 parser.add_option("--resname", action="store",  help="Resource name (when --source=page).")
-parser.add_option("--ldpi",    action="store",  help="Export LDPI variants")
-parser.add_option("--mdpi",    action="store",  help="Export MDPI variants")
-parser.add_option("--hdpi",    action="store",  help="Export HDPI variants")
-parser.add_option("--xhdpi",   action="store",  help="Export XHDPI variants")
-parser.add_option("--xxhdpi",  action="store",  help="Export XXHDPI variants")
-parser.add_option("--xxxhdpi", action="store",  help="Export XXXHDPI variants")
-parser.add_option("--reduce",  action="store",  help="Use ImageMagick and OptiPNG to reduce the image size")
+parser.add_option("--ldpi",    action="store",  type="boolstr", help="Export LDPI variants")
+parser.add_option("--mdpi",    action="store",  type="boolstr", help="Export MDPI variants")
+parser.add_option("--hdpi",    action="store",  type="boolstr", help="Export HDPI variants")
+parser.add_option("--xhdpi",   action="store",  type="boolstr", help="Export XHDPI variants")
+parser.add_option("--xxhdpi",  action="store",  type="boolstr", help="Export XXHDPI variants")
+parser.add_option("--xxxhdpi", action="store",  type="boolstr", help="Export XXXHDPI variants")
+parser.add_option("--reduce",  action="store",  type="boolstr", help="Use ImageMagick and OptiPNG to reduce the image size")
 
 svg = sys.argv[-1]
 (options, args) = parser.parse_args()
@@ -99,25 +110,25 @@ if options.source == '"selected_ids"' and options.id is None:
   error("Select at least one item to export")
 if options.source == '"page"' and not options.resname:
   error("Please enter a resource name")
-if not check(options.ldpi) and not check(options.mdpi) and not check(options.hdpi) and not check(options.xhdpi) and not check(options.xxhdpi) and not check(options.xxxhdpi):
+if not options.ldpi and not options.mdpi and not options.hdpi and not options.xhdpi and not options.xxhdpi and not options.xxxhdpi:
   error("Select at least one DPI variant to export")
 if not checkForPath("inkscape"):
   error("Make sure you have 'inkscape' on your PATH")
-if check(options.reduce):
+if options.reduce:
   if not checkForPath("convert"):
     error("Make sure you have 'convert' on your PATH if you want to reduce the image size")
   if not checkForPath("optipng"):
     error("Make sure you have 'optipng' on your PATH if you want to reduce the image size")
-  
-if check(options.ldpi):
+
+if options.ldpi:
   export(svg, options, "ldpi", 67.5)
-if check(options.mdpi):
+if options.mdpi:
   export(svg, options, "mdpi", 90)
-if check(options.hdpi):
+if options.hdpi:
   export(svg, options, "hdpi", 135)
-if check(options.xhdpi):
+if options.xhdpi:
   export(svg, options, "xhdpi", 180)
-if check(options.xxhdpi):
+if options.xxhdpi:
   export(svg, options, "xxhdpi", 270)
-if check(options.xxxhdpi):
+if options.xxxhdpi:
   export(svg, options, "xxxhdpi", 360)
