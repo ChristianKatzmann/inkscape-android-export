@@ -59,10 +59,11 @@ def export_density(svg, options, qualifier, dpi):
                               svg
                             ], stdout=DEVNULL, stderr=subprocess.STDOUT)
 
-    if options.reduce:
+    if options.strip:
       subprocess.check_call([
                                 "convert", "-antialias", "-strip", png, png
                               ], stdout=DEVNULL, stderr=subprocess.STDOUT)
+    if options.optimize:
       subprocess.check_call([
                                 "optipng", "-quiet", "-o7", png
                               ], stdout=DEVNULL, stderr=subprocess.STDOUT)
@@ -113,7 +114,8 @@ group.add_density_option("xxhdpi", 270)
 group.add_density_option("xxxhdpi", 360)
 parser.add_option_group(group)
 
-parser.add_option("--reduce",  action="store",  type="boolstr", help="Use ImageMagick and OptiPNG to reduce the image size")
+parser.add_option("--strip",  action="store",  type="boolstr", help="Use ImageMagick to reduce the image size")
+parser.add_option("--optimize",  action="store",  type="boolstr", help="Use OptiPNG to reduce the image size")
 
 (options, args) = parser.parse_args()
 if len(args) != 1:
@@ -134,10 +136,9 @@ if not options.densities:
   error("Select at least one DPI variant to export")
 if not checkForPath("inkscape"):
   error("Make sure you have 'inkscape' on your PATH")
-if options.reduce:
-  if not checkForPath("convert"):
+if options.strip and not checkForPath("convert"):
     error("Make sure you have 'convert' on your PATH if you want to reduce the image size")
-  if not checkForPath("optipng"):
+if options.optimize and not checkForPath("optipng"):
     error("Make sure you have 'optipng' on your PATH if you want to reduce the image size")
 
 export(svg, options)
