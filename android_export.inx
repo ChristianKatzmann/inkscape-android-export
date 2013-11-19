@@ -5,7 +5,15 @@
 
 	<dependency type="executable" location="extensions">android_export.py</dependency>
 
-	<_param name="title" type="description">This extension exports all currently selected items in different densities. The exported PNGs will be named by their ID in the SVG, so make sure that all items have reasonable IDs.</_param>
+	<param name="source" type="notebook">
+		<page name="selected_ids" _gui-text="Selection">
+			<_param name="title" type="description">Exports all currently selected items in different densities. The exported PNGs will be named by their ID in the SVG, so make sure that all items have reasonable IDs.</_param>
+		</page>
+		<page name="page" _gui-text="Page">
+			<_param name="title" type="description">Exports the entire page in different densities.</_param>
+			<param name="resname" type="string" _gui-text="Resource name" />
+		</page>
+	</param>
 
 	<param name="resdir" type="string" _gui-text="Android Resource directory"></param>
 	<param name="ldpi" type="boolean" _gui-text="Export LDPI variants">false</param>
@@ -14,7 +22,8 @@
 	<param name="xhdpi" type="boolean" _gui-text="Export XHDPI variants">true</param>
 	<param name="xxhdpi" type="boolean" _gui-text="Export XXHDPI variants">true</param>
 	<param name="xxxhdpi" type="boolean" _gui-text="Export XXXHDPI variants">true</param>
-	<param name="reduce" type="boolean" _gui-text="Use ImageMagick and OptiPNG to reduce the image size">true</param>
+	<param name="strip" type="boolean" _gui-text="Use ImageMagick to reduce the image size">false</param>
+	<param name="optimize" type="boolean" _gui-text="Use OptiPNG to reduce the image size">true</param>
 
 	<effect needs-live-preview="false">
 		<object-type>all</object-type>

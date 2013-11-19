@@ -22,88 +22,123 @@ import optparse
 import sys
 import os
 import subprocess
-
-def check(value):
-  return value.capitalize() == 'True'
+from copy import copy
+try:
+  from subprocess import DEVNULL
+except ImportError:
+  DEVNULL = open(os.devnull, 'w')
 
 def checkForPath(command):
-  try:
-    subprocess.check_output([
+  return 0 == subprocess.call([
                               command, "--version"
-                            ], stderr=subprocess.STDOUT)
-    return True
-  except:
-    return False
+                            ], stdout=DEVNULL, stderr=subprocess.STDOUT)
 
 def error(msg):
   sys.stderr.write((unicode(msg) + "\n").encode("UTF-8"))
+  sys.exit(1)
 
-def export(svg, options, qualifier, dpi):
+def export(svg, options):
+  for qualifier, dpi in options.densities:
+    export_density(svg, options, qualifier, dpi)
+
+def export_density(svg, options, qualifier, dpi):
   dir = "%s/drawable-%s" % (options.resdir, qualifier)
 
   if not os.path.exists(dir):
     os.makedirs(dir)
 
-  for id in options.id:
-    png = "%s/%s.png" % (dir, id)
+  def export_resource(param, name):
+    png = "%s/%s.png" % (dir, name)
 
-    subprocess.check_output([
+    subprocess.check_call([
                               "inkscape",
                               "--without-gui",
-                              "--export-id=%s" % id,
+                              param,
                               "--export-dpi=%s" % dpi,
                               "--export-png=%s" % png,
                               svg
-                            ], stderr=subprocess.STDOUT)
+                            ], stdout=DEVNULL, stderr=subprocess.STDOUT)
 
-    if check(options.reduce):
-      subprocess.check_output([
+    if options.strip:
+      subprocess.check_call([
                                 "convert", "-antialias", "-strip", png, png
-                              ], stderr=subprocess.STDOUT)
-      subprocess.check_output([
+                              ], stdout=DEVNULL, stderr=subprocess.STDOUT)
+    if options.optimize:
+      subprocess.check_call([
                                 "optipng", "-quiet", "-o7", png
-                              ], stderr=subprocess.STDOUT)
+                              ], stdout=DEVNULL, stderr=subprocess.STDOUT)
 
-parser = optparse.OptionParser(usage="usage: %prog [options] SVGfile")
-parser.add_option("--id",      action="append", help="ID attribute of objects to export")
+  if options.source == '"selected_ids"':
+    for id in options.ids:
+      export_resource("--export-id=%s" % id, id)
+  else:
+    export_resource("--export-area-page", options.resname)
+
+def check_boolstr(option, opt, value):
+  value = value.capitalize()
+  if value == "True":
+    return True
+  if value == "False":
+    return False
+  raise optparse.OptionValueError("option %s: invalid boolean value: %s" % (opt, value))
+
+class Option(optparse.Option):
+  TYPES = optparse.Option.TYPES + ("boolstr",)
+  TYPE_CHECKER = copy(optparse.Option.TYPE_CHECKER)
+  TYPE_CHECKER["boolstr"] = check_boolstr
+
+def append_density(option, opt_str, value, parser, *density):
+  if not value:
+    return
+  if getattr(parser.values, option.dest) is None:
+      setattr(parser.values, option.dest, [])
+  getattr(parser.values, option.dest).append(density)
+
+class DensityGroup(optparse.OptionGroup):
+  def add_density_option(self, name, dpi):
+    self.add_option("--%s" % name, action="callback", type="boolstr", dest="densities", metavar="BOOL",
+      callback=append_density, callback_args=(name, dpi), help="Export %s variants" % (name.upper()))
+
+parser = optparse.OptionParser(usage="usage: %prog [options] SVGfile", option_class=Option)
+parser.add_option("--source",  action="store", type="choice", choices=('"selected_ids"', '"page"'),  help="Source of the drawable")
+parser.add_option("--id",      action="append", dest="ids", metavar="ID", help="ID attribute of objects to export, can be specified multiple times")
 parser.add_option("--resdir",  action="store",  help="Resources directory")
-parser.add_option("--ldpi",    action="store",  help="Export LDPI variants")
-parser.add_option("--mdpi",    action="store",  help="Export MDPI variants")
-parser.add_option("--hdpi",    action="store",  help="Export HDPI variants")
-parser.add_option("--xhdpi",   action="store",  help="Export XHDPI variants")
-parser.add_option("--xxhdpi",  action="store",  help="Export XXHDPI variants")
-parser.add_option("--xxxhdpi", action="store",  help="Export XXXHDPI variants")
-parser.add_option("--reduce",  action="store",  help="Use ImageMagick and OptiPNG to reduce the image size")
+parser.add_option("--resname", action="store",  help="Resource name (when --source=page)")
 
-svg = sys.argv[-1]
+group = DensityGroup(parser, "Select which densities to export")
+group.add_density_option("ldpi", 67.5)
+group.add_density_option("mdpi", 90)
+group.add_density_option("hdpi", 135)
+group.add_density_option("xhdpi", 180)
+group.add_density_option("xxhdpi", 270)
+group.add_density_option("xxxhdpi", 360)
+parser.add_option_group(group)
+
+parser.add_option("--strip",  action="store",  type="boolstr", help="Use ImageMagick to reduce the image size")
+parser.add_option("--optimize",  action="store",  type="boolstr", help="Use OptiPNG to reduce the image size")
+
 (options, args) = parser.parse_args()
+if len(args) != 1:
+  parser.error("Expected exactly one argument, got %d" % len(args))
+svg = args[0]
 
 if options.resdir is None:
   error("No Android Resource directory specified")
-elif not os.path.isdir(options.resdir):
+if not os.path.isdir(options.resdir):
   error("Wrong Android Resource directory specified:\n'%s' is no dir" % options.resdir)
-elif not os.access(options.resdir, os.W_OK):
+if not os.access(options.resdir, os.W_OK):
   error("Wrong Android Resource directory specified:\nCould not write to '%s'" % options.resdir)
-elif options.id is None:
+if options.source not in ('"selected_ids"', '"page"'):
+  error("Select what to export (selected items or whole page)")
+if options.source == '"selected_ids"' and options.ids is None:
   error("Select at least one item to export")
-elif not check(options.ldpi) and not check(options.mdpi) and not check(options.hdpi) and not check(options.xhdpi) and not check(options.xxhdpi) and not check(options.xxxhdpi):
+if not options.densities:
   error("Select at least one DPI variant to export")
-elif not checkForPath("inkscape"):
+if not checkForPath("inkscape"):
   error("Make sure you have 'inkscape' on your PATH")
-elif check(options.reduce) and not checkForPath("convert"):
-  error("Make sure you have 'convert' on your PATH if you want to reduce the image size")
-elif check(options.reduce) and not checkForPath("optipng"):
-  error("Make sure you have 'optipng' on your PATH if you want to reduce the image size")
-else:
-  if check(options.ldpi):
-    export(svg, options, "ldpi", 67.5)
-  if check(options.mdpi):
-    export(svg, options, "mdpi", 90)
-  if check(options.hdpi):
-    export(svg, options, "hdpi", 135)
-  if check(options.xhdpi):
-    export(svg, options, "xhdpi", 180)
-  if check(options.xxhdpi):
-    export(svg, options, "xxhdpi", 270)
-  if check(options.xxxhdpi):
-    export(svg, options, "xxxhdpi", 360)
+if options.strip and not checkForPath("convert"):
+    error("Make sure you have 'convert' on your PATH if you want to reduce the image size")
+if options.optimize and not checkForPath("optipng"):
+    error("Make sure you have 'optipng' on your PATH if you want to reduce the image size")
+
+export(svg, options)
