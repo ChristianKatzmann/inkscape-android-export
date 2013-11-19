@@ -30,8 +30,8 @@ except ImportError:
 
 def checkForPath(command):
   return 0 == subprocess.call([
-                              command, "--version"
-                            ], stdout=DEVNULL, stderr=subprocess.STDOUT)
+                                command, "--version"
+                              ], stdout=DEVNULL, stderr=subprocess.STDOUT)
 
 def error(msg):
   sys.stderr.write((unicode(msg) + "\n").encode("UTF-8"))
@@ -51,22 +51,22 @@ def export_density(svg, options, qualifier, dpi):
     png = "%s/%s.png" % (dir, name)
 
     subprocess.check_call([
-                              "inkscape",
-                              "--without-gui",
-                              param,
-                              "--export-dpi=%s" % dpi,
-                              "--export-png=%s" % png,
-                              svg
-                            ], stdout=DEVNULL, stderr=subprocess.STDOUT)
+                            "inkscape",
+                            "--without-gui",
+                            param,
+                            "--export-dpi=%s" % dpi,
+                            "--export-png=%s" % png,
+                            svg
+                          ], stdout=DEVNULL, stderr=subprocess.STDOUT)
 
     if options.strip:
       subprocess.check_call([
-                                "convert", "-antialias", "-strip", png, png
-                              ], stdout=DEVNULL, stderr=subprocess.STDOUT)
+                              "convert", "-antialias", "-strip", png, png
+                            ], stdout=DEVNULL, stderr=subprocess.STDOUT)
     if options.optimize:
       subprocess.check_call([
-                                "optipng", "-quiet", "-o7", png
-                              ], stdout=DEVNULL, stderr=subprocess.STDOUT)
+                              "optipng", "-quiet", "-o7", png
+                            ], stdout=DEVNULL, stderr=subprocess.STDOUT)
 
   if options.source == '"selected_ids"':
     for id in options.ids:
@@ -91,13 +91,13 @@ def append_density(option, opt_str, value, parser, *density):
   if not value:
     return
   if getattr(parser.values, option.dest) is None:
-      setattr(parser.values, option.dest, [])
+    setattr(parser.values, option.dest, [])
   getattr(parser.values, option.dest).append(density)
 
 class DensityGroup(optparse.OptionGroup):
   def add_density_option(self, name, dpi):
     self.add_option("--%s" % name, action="callback", type="boolstr", dest="densities", metavar="BOOL",
-      callback=append_density, callback_args=(name, dpi), help="Export %s variants" % (name.upper()))
+      callback=append_density, callback_args=(name, dpi), help="Export %s variants" % name.upper())
 
 parser = optparse.OptionParser(usage="usage: %prog [options] SVGfile", option_class=Option)
 parser.add_option("--source",  action="store", type="choice", choices=('"selected_ids"', '"page"'),  help="Source of the drawable")
@@ -132,13 +132,15 @@ if options.source not in ('"selected_ids"', '"page"'):
   error("Select what to export (selected items or whole page)")
 if options.source == '"selected_ids"' and options.ids is None:
   error("Select at least one item to export")
+if options.source == '"page"' and not options.resname:
+  error("Please enter a resource name")
 if not options.densities:
   error("Select at least one DPI variant to export")
 if not checkForPath("inkscape"):
   error("Make sure you have 'inkscape' on your PATH")
 if options.strip and not checkForPath("convert"):
-    error("Make sure you have 'convert' on your PATH if you want to reduce the image size")
+  error("Make sure you have 'convert' on your PATH if you want to reduce the image size using ImageMagick")
 if options.optimize and not checkForPath("optipng"):
-    error("Make sure you have 'optipng' on your PATH if you want to reduce the image size")
+  error("Make sure you have 'optipng' on your PATH if you want to reduce the image size using OptiPNG")
 
 export(svg, options)
