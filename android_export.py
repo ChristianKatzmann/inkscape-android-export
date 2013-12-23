@@ -29,9 +29,12 @@ except ImportError:
   DEVNULL = open(os.devnull, 'w')
 
 def checkForPath(command):
-  return 0 == subprocess.call([
-                                command, "--version"
-                              ], stdout=DEVNULL, stderr=subprocess.STDOUT)
+  try:
+    return 0 == subprocess.call([
+                                  command, "--version"
+                                ], stdout=DEVNULL, stderr=subprocess.STDOUT)
+  except:
+    return False
 
 def error(msg):
   sys.stderr.write((unicode(msg) + "\n").encode("UTF-8"))
