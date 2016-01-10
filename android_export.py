@@ -42,7 +42,11 @@ def export(svg, options):
     export_density(svg, options, qualifier, dpi)
 
 def export_density(svg, options, qualifier, dpi):
-  dir = "%s/drawable-%s" % (options.resdir, qualifier)
+  dir_type = "drawable"
+  if options.launcher_icon:
+  	dir_type = "mipmap"
+
+  dir = "%s/%s-%s" % (options.resdir, dir_type, qualifier)
 
   if not os.path.exists(dir):
     os.makedirs(dir)
@@ -104,6 +108,7 @@ parser.add_option("--source",  action="store", type="choice", choices=('"selecte
 parser.add_option("--id",      action="append", dest="ids", metavar="ID", help="ID attribute of objects to export, can be specified multiple times")
 parser.add_option("--resdir",  action="store",  help="Resources directory")
 parser.add_option("--resname", action="store",  help="Resource name (when --source=page)")
+parser.add_option("--launcher-icon", action="store", type="boolstr", help="Whether the icon is a launcher icon")
 
 group = DensityGroup(parser, "Select which densities to export")
 group.add_density_option("ldpi", 67.5)

@@ -16,6 +16,7 @@
 	</param>
 
 	<param name="resdir" type="string" _gui-text="Android Resource directory"></param>
+	<param name="launcher-icon" type="boolean" _gui-text="Launcher Icon">false</param>
 	<param name="ldpi" type="boolean" _gui-text="Export LDPI variants">false</param>
 	<param name="mdpi" type="boolean" _gui-text="Export MDPI variants">true</param>
 	<param name="hdpi" type="boolean" _gui-text="Export HDPI variants">true</param>
