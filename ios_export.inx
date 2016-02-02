@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
+	<_name>iOS Export</_name>
+	<id>de.cbecker.ios_export</id>
+
+	<dependency type="executable" location="extensions">ios_export.py</dependency>
+
+	<param name="source" type="notebook">
+		<page name="selected_ids" _gui-text="Selection">
+			<_param name="title" type="description">Exports all currently selected items in different densities. The exported PNGs will be named by their ID in the SVG, so make sure that all items have reasonable IDs.</_param>
+		</page>
+		<page name="page" _gui-text="Page">
+			<_param name="title" type="description">Exports the entire page in different densities.</_param>
+			<param name="resname" type="string" _gui-text="Resource name" />
+		</page>
+	</param>
+
+	<param name="resdir" type="string" _gui-text="Android Resource directory"></param>
+	<param name="@1x" type="boolean" _gui-text="Export @1x">true</param>
+	<param name="@2x" type="boolean" _gui-text="Export @2x">true</param>
+	<param name="@3x" type="boolean" _gui-text="Export @3x">true</param>
+	<param name="strip" type="boolean" _gui-text="Use ImageMagick to reduce the image size">false</param>
+	<param name="optimize" type="boolean" _gui-text="Use OptiPNG to reduce the image size">true</param>
+
+	<effect needs-live-preview="false">
+		<object-type>all</object-type>
+		<effects-menu>
+			<submenu _name="Export"/>
+		</effects-menu>
+	</effect>
+
+	<script>
+		<command reldir="extensions" interpreter="python">ios_export.py</command>
+	</script>
+</inkscape-extension>
