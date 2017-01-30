@@ -7,14 +7,17 @@
 
 	<param name="source" type="notebook">
 		<page name="selected_ids" _gui-text="Selection">
-			<_param name="title" type="description">Exports all currently selected items in different densities. The exported PNGs will be named by their ID in the SVG, so make sure that all items have reasonable IDs.</_param>
+			<_param name="title" type="description">Exports all currently selected items in different densities. If there are multiple selections, the exported PNGs will be named by their ID in the SVG, so make sure that all items have reasonable IDs.</_param>
+			<param name="only-selected" type="boolean" _gui-text="Hide all except selected">true</param>
+			<param name="transparent-background" type="boolean" _gui-text="Transparent background">false</param>
+			<param name="scale" type="float" _gui-text="Output scale">1</param>
 		</page>
 		<page name="page" _gui-text="Page">
 			<_param name="title" type="description">Exports the entire page in different densities.</_param>
-			<param name="resname" type="string" _gui-text="Resource name" />
 		</page>
 	</param>
 
+    <param name="resname" type="string" _gui-text="Resource name" />
 	<param name="resdir" type="string" _gui-text="Android Resource directory"></param>
 	<param name="launcher-icon" type="boolean" _gui-text="Launcher Icon">false</param>
 	<param name="ldpi" type="boolean" _gui-text="Export LDPI variants">false</param>
