@@ -17,7 +17,7 @@
 		</page>
 	</param>
 
-    <param name="resname" type="string" _gui-text="Resource name" />
+	<param name="resname" type="string" _gui-text="Resource name" />
 	<param name="resdir" type="string" _gui-text="Android Resource directory"></param>
 	<param name="launcher-icon" type="boolean" _gui-text="Launcher Icon">false</param>
 	<param name="ldpi" type="boolean" _gui-text="Export LDPI variants">false</param>
