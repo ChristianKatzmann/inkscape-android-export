@@ -30,9 +30,12 @@ except ImportError:
   DEVNULL = open(os.devnull, 'w')
 
 def checkForPath(command):
-  return 0 == subprocess.call([
-                                command, "--version"
-                              ], stdout=DEVNULL, stderr=subprocess.STDOUT)
+  try:
+    return 0 == subprocess.call([
+                                  command, "--version"
+                                ], stdout=DEVNULL, stderr=subprocess.STDOUT)
+  except:
+    return False
 
 def error(msg):
   sys.stderr.write((unicode(msg) + "\n").encode("UTF-8"))
@@ -148,12 +151,15 @@ parser.add_option("--scale", action="store", type="float", help="Output image sc
 parser.add_option("--transparent-background", action="store", type="boolstr", help="Transparent background")
 
 group = DensityGroup(parser, "Select which densities to export")
-group.add_density_option("ldpi", 67.5)
-group.add_density_option("mdpi", 90)
-group.add_density_option("hdpi", 135)
-group.add_density_option("xhdpi", 180)
-group.add_density_option("xxhdpi", 270)
-group.add_density_option("xxxhdpi", 360)
+# dpi obtained from http://developer.android.com/guide/practices/screens_support.html
+# 3:4:6:8 ratio see Table 1. Configuration qualifiers that allow you to provide special resources for different screen configurations.
+# and 1:1.5:2:3:4 ratios from developer.android.com/design/style/iconography.html
+group.add_density_option("ldpi", 120)
+group.add_density_option("mdpi", 160)
+group.add_density_option("hdpi", 240)
+group.add_density_option("xhdpi", 320)
+group.add_density_option("xxhdpi", 480)
+group.add_density_option("xxxhdpi", 640)
 parser.add_option_group(group)
 
 parser.add_option("--strip",  action="store",  type="boolstr", help="Use ImageMagick to reduce the image size")
