@@ -19,10 +19,11 @@
 # ***** END APACHE LICENCE BLOCK *****
 
 import optparse
-import sys
 import os
 import subprocess
+import sys
 from copy import copy
+
 try:
   from subprocess import DEVNULL
 except ImportError:
@@ -44,24 +45,29 @@ def export(svg, options):
 def export_density(svg, options, qualifier, dpi):
   dir_type = "drawable"
   if options.launcher_icon:
-  	dir_type = "mipmap"
+    dir_type = "mipmap"
 
   dir = "%s/%s-%s" % (options.resdir, dir_type, qualifier)
 
   if not os.path.exists(dir):
     os.makedirs(dir)
 
-  def export_resource(param, name):
+  def export_resource(params, name):
     png = "%s/%s.png" % (dir, name)
 
-    subprocess.check_call([
-                            "inkscape",
-                            "--without-gui",
-                            param,
-                            "--export-dpi=%s" % dpi,
-                            "--export-png=%s" % png,
-                            svg
-                          ], stdout=DEVNULL, stderr=subprocess.STDOUT)
+    call_params = ["inkscape",
+                   "--without-gui",
+                   "--export-dpi=%s" % dpi,
+                   "--export-png=%s" % png]
+
+    if isinstance(params, list):
+        call_params.extend(params)
+    else:
+        call_params.append(params)
+
+    call_params.append(svg)
+
+    subprocess.check_call(call_params, stdout=DEVNULL, stderr=subprocess.STDOUT)
 
     if options.strip:
       subprocess.check_call([
@@ -73,10 +79,38 @@ def export_density(svg, options, qualifier, dpi):
                             ], stdout=DEVNULL, stderr=subprocess.STDOUT)
 
   if options.source == '"selected_ids"':
+    if options.scale and (options.scale > 0):
+      dpi *= options.scale
+
+    params = create_selection_params(options)
+
     for id in options.ids:
-      export_resource("--export-id=%s" % id, id)
+      current_params = ["--export-id=%s" % id]
+      current_params.extend(params)
+
+      filename = get_selection_filename(id, options)
+
+      export_resource(current_params, filename)
+
   else:
     export_resource("--export-area-page", options.resname)
+
+
+def create_selection_params(options):
+    params = []
+    if options.only_selected:
+        params.append("--export-id-only")
+    if options.transparent_background:
+        params.append("-y 0")
+    return params
+
+
+def get_selection_filename(id, options):
+    if len(options.ids) == 1 and options.resname:
+        return options.resname
+
+    return id
+
 
 def check_boolstr(option, opt, value):
   value = value.capitalize()
@@ -109,6 +143,9 @@ parser.add_option("--id",      action="append", dest="ids", metavar="ID", help="
 parser.add_option("--resdir",  action="store",  help="Resources directory")
 parser.add_option("--resname", action="store",  help="Resource name (when --source=page)")
 parser.add_option("--launcher-icon", action="store", type="boolstr", help="Whether the icon is a launcher icon")
+parser.add_option("--only-selected", action="store", type="boolstr", help="Export only selected (without any background or other elements)")
+parser.add_option("--scale", action="store", type="float", help="Output image scale")
+parser.add_option("--transparent-background", action="store", type="boolstr", help="Transparent background")
 
 group = DensityGroup(parser, "Select which densities to export")
 group.add_density_option("ldpi", 67.5)
