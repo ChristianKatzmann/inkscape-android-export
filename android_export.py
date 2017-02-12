@@ -29,10 +29,20 @@ try:
 except ImportError:
   DEVNULL = open(os.devnull, 'w')
 
-def checkForPath(command):
-  return 0 == subprocess.call([
-                                command, "--version"
-                              ], stdout=DEVNULL, stderr=subprocess.STDOUT)
+
+def check_for_path(command):
+  try:
+    subprocess.check_call([
+                            command, "--version"
+                          ], stdout=DEVNULL, stderr=subprocess.STDOUT)
+    return True
+
+  except OSError: # thrown if path not exists
+    return False
+
+  except subprocess.CalledProcessError: # any other execution error
+    return True
+
 
 def error(msg):
   sys.stderr.write((unicode(msg) + "\n").encode("UTF-8"))
@@ -178,11 +188,11 @@ if options.source == '"page"' and not options.resname:
   error("Please enter a resource name")
 if not options.densities:
   error("Select at least one DPI variant to export")
-if not checkForPath("inkscape"):
+if not check_for_path("inkscape"):
   error("Make sure you have 'inkscape' on your PATH")
-if options.strip and not checkForPath("convert"):
+if options.strip and not check_for_path("convert"):
   error("Make sure you have 'convert' on your PATH if you want to reduce the image size using ImageMagick")
-if options.optimize and not checkForPath("optipng"):
+if options.optimize and not check_for_path("optipng"):
   error("Make sure you have 'optipng' on your PATH if you want to reduce the image size using OptiPNG")
 
 export(svg, options)
