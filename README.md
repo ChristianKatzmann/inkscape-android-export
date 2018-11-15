@@ -1,4 +1,4 @@
-inkscape-android-export
+inkscape-mobile-export
 ========
 
 This Inkscape extension exports all selected items in different densities. The exported PNGs will be named by their ID in the SVG.
@@ -6,13 +6,20 @@ This Inkscape extension exports all selected items in different densities. The e
 Install
 --------
 
-Download `android_export.inx` and `android_export.py` and copy both files to your `$HOME/.config/inkscape/extensions` folder. A restart of Inkscape is required.
+Download `android_export.inx`,`android_export.py`,`ios_export.inx`,`ios_export.py`. Depending on OS, copy both files to your extensions folder:
+
+* Linux - `$HOME/.config/inkscape/extensions`
+* Windows - `%APPDATA%\inkscape\extensions`
+
+A restart of Inkscape is required.
 
 Usage
 --------
 
 * Select at least one item to export
-* Select `Extensions -> Export -> Android Export…`
+* According your needs choose:
+  1. Android: Select `Extensions -> Export -> Android Export…`
+  2. iOS: Select `Extensions -> Export -> iOS Export…` 
 * Customize the settings according to your needs
 
 License

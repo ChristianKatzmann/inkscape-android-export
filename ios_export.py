@@ -23,7 +23,6 @@ import os
 import subprocess
 import sys
 from copy import copy
-
 try:
   from subprocess import DEVNULL
 except ImportError:
@@ -43,31 +42,23 @@ def export(svg, options):
     export_density(svg, options, qualifier, dpi)
 
 def export_density(svg, options, qualifier, dpi):
-  dir_type = "drawable"
-  if options.launcher_icon:
-    dir_type = "mipmap"
-
-  dir = "%s/%s-%s" % (options.resdir, dir_type, qualifier)
+  dir = options.resdir
 
   if not os.path.exists(dir):
     os.makedirs(dir)
 
-  def export_resource(params, name):
-    png = "%s/%s.png" % (dir, name)
+  if qualifier == '@1x':
+    qualifier = ''
+	
+  def export_resource(param, name, qualifier):
+    png = "%s/%s%s.png" % (dir, name, qualifier)
 
-    call_params = ["inkscape",
-                   "--without-gui",
-                   "--export-dpi=%s" % dpi,
-                   "--export-png=%s" % png]
-
-    if isinstance(params, list):
-        call_params.extend(params)
-    else:
-        call_params.append(params)
-
-    call_params.append(svg)
-
-    subprocess.check_call(call_params, stdout=DEVNULL, stderr=subprocess.STDOUT)
+    subprocess.check_call([ "inkscape",
+                            "--without-gui",
+                            param,
+                            "--export-dpi=%s" % dpi,
+                            "--export-png=%s" % png,
+                            svg ], stdout=DEVNULL, stderr=subprocess.STDOUT)
 
     if options.strip:
       subprocess.check_call([
@@ -79,38 +70,10 @@ def export_density(svg, options, qualifier, dpi):
                             ], stdout=DEVNULL, stderr=subprocess.STDOUT)
 
   if options.source == '"selected_ids"':
-    if options.scale and (options.scale > 0):
-      dpi *= options.scale
-
-    params = create_selection_params(options)
-
     for id in options.ids:
-      current_params = ["--export-id=%s" % id]
-      current_params.extend(params)
-
-      filename = get_selection_filename(id, options)
-
-      export_resource(current_params, filename)
-
+      export_resource("--export-id=%s" % id, id, qualifier)
   else:
-    export_resource("--export-area-page", options.resname)
-
-
-def create_selection_params(options):
-    params = []
-    if options.only_selected:
-        params.append("--export-id-only")
-    if options.transparent_background:
-        params.append("-y 0")
-    return params
-
-
-def get_selection_filename(id, options):
-    if len(options.ids) == 1 and options.resname:
-        return options.resname
-
-    return id
-
+    export_resource("--export-area-page", options.resname, qualifier)
 
 def check_boolstr(option, opt, value):
   value = value.capitalize()
@@ -142,18 +105,11 @@ parser.add_option("--source",  action="store", type="choice", choices=('"selecte
 parser.add_option("--id",      action="append", dest="ids", metavar="ID", help="ID attribute of objects to export, can be specified multiple times")
 parser.add_option("--resdir",  action="store",  help="Resources directory")
 parser.add_option("--resname", action="store",  help="Resource name (when --source=page)")
-parser.add_option("--launcher-icon", action="store", type="boolstr", help="Whether the icon is a launcher icon")
-parser.add_option("--only-selected", action="store", type="boolstr", help="Export only selected (without any background or other elements)")
-parser.add_option("--scale", action="store", type="float", help="Output image scale")
-parser.add_option("--transparent-background", action="store", type="boolstr", help="Transparent background")
 
 group = DensityGroup(parser, "Select which densities to export")
-group.add_density_option("ldpi", 72)
-group.add_density_option("mdpi", 96)
-group.add_density_option("hdpi", 144)
-group.add_density_option("xhdpi", 192)
-group.add_density_option("xxhdpi", 288)
-group.add_density_option("xxxhdpi", 384)
+group.add_density_option("@1x", 96)
+group.add_density_option("@2x", 192)
+group.add_density_option("@3x", 288)
 parser.add_option_group(group)
 
 parser.add_option("--strip",  action="store",  type="boolstr", help="Use ImageMagick to reduce the image size")
@@ -165,11 +121,11 @@ if len(args) != 1:
 svg = args[0]
 
 if options.resdir is None:
-  error("No Android Resource directory specified")
+  error("No iOS Resource directory specified")
 if not os.path.isdir(options.resdir):
-  error("Wrong Android Resource directory specified:\n'%s' is no dir" % options.resdir)
+  error("Wrong iOS Resource directory specified:\n'%s' is no dir" % options.resdir)
 if not os.access(options.resdir, os.W_OK):
-  error("Wrong Android Resource directory specified:\nCould not write to '%s'" % options.resdir)
+  error("Wrong iOS Resource directory specified:\nCould not write to '%s'" % options.resdir)
 if options.source not in ('"selected_ids"', '"page"'):
   error("Select what to export (selected items or whole page)")
 if options.source == '"selected_ids"' and options.ids is None:
